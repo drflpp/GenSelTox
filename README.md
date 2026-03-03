@@ -1,3 +1,5 @@
+![](/Figure.png)
+
 **Guidelines**
 
 This repository contains all the necessary files for screening selectevely antimicrobial inorganic NPs. The repository includes folders for `LoadingGenomicData`, `Data and Preprocessing`, `ModelBuilding`, `ModelOptimization`, `GeneticAlgorithm` and `ReinforcementLearning`.
