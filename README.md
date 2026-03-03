@@ -12,7 +12,7 @@ Folder contains preprocessed data with genomic descriptors: one dataset with mer
 
 **ML Model Building**
 
-Folder contains a file with necessary code for feature selection based on statistical approach (correlation and varience threshold), feature importance and permutation importance.
+Folder contains a file with necessary code for feature selection based on statistical approach (correlation and varience threshold), feature importance and permutation importance as well as model training code.
 
 **ML Model Optimization:**  
 
