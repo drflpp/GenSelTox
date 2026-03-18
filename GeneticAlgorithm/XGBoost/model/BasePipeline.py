@@ -1,44 +1,10 @@
-from sklearn.metrics import mean_squared_error
-# import optuna
-from sklearn.ensemble import ExtraTreesRegressor
-from sklearn.model_selection import KFold
-import pandas as pd
-# import pyarrow as pa
-import polars as pl
-import numpy as np
-import time
-
-import numpy as np
-import polars as pl
+import matplotlib as mpl
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score, mean_squared_error
-from sklearn.feature_selection import VarianceThreshold
-from sklearn.preprocessing import OrdinalEncoder, StandardScaler
-from xgboost import XGBRegressor
-import time
-from catboost import CatBoostRegressor
-
-from sklearn.ensemble import RandomForestRegressor
-import re
-import matplotlib.pyplot as plt
-# import shap
-import matplotlib.pyplot as plt
-import xgboost as xgb
-import numpy as np
-import polars as pl
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score, root_mean_squared_error
-from sklearn.feature_selection import VarianceThreshold
-from sklearn.preprocessing import OrdinalEncoder, StandardScaler
-from xgboost import XGBRegressor
 import matplotlib.pyplot as plt
 import time
-from sklearn.inspection import permutation_importance
 import random
-from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 import re
 import numpy as np
-import pandas as pd
 import polars as pl
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.feature_selection import VarianceThreshold
@@ -47,105 +13,73 @@ RANDOM_STATE = 42
 np.random.seed(RANDOM_STATE)
 random.seed(RANDOM_STATE)
 plt.rcParams['figure.dpi'] = 100  # Ensure consistent plotting resolution
+i = 1
 
-# Set a seed for reproducibility
 random.seed(0)
 
-#
-# def simple(val):
-#     return (val + 4)
-#
-#
-# results_df = pd.DataFrame(columns=[
-#     'dataset_name',
-#     'dataset_type',
-#     'model_name',
-#     'data_shape',
-#
-#     'r2_score',
-#     'rmse',
-#     'top_features'
-# ])
-#
-# cols = ['reference'
-#
-#     , 'CID', 'np', 'Canonical_smiles', 'np_synthesis', 'bacteria_strain',
-#
-#         ]
-#
-#
-# # ml_utils.py
-#
-#
-# Очистка имён признаков
 def clean_feature_names(feature_names):
     clean_names = []
     for name in feature_names:
         clean_name = re.sub(r'[^a-zA-Z0-9_]', '_', str(name))
         clean_names.append(clean_name)
     return clean_names
-#
-#
-# # Получение названия модели
-# def get_model_name(model):
-#     return model.__class__.__name__
-#
-#
-# # Логирование результатов
-# def log_result(dataset_name, dataset_type, model, data_shape, r2, rmse, feature_names=None):
-#     global results_df
-#     model_name = get_model_name(model)
-#
-#     top_features = None
-#     if hasattr(model, 'feature_importances_') and feature_names is not None:
-#         importances = model.feature_importances_
-#         indices = importances.argsort()[::-1][:10]
-#         top_features = [feature_names[i] for i in indices]
-#
-#     new_row = {
-#         'dataset_name': dataset_name,
-#         'dataset_type': dataset_type,
-#         'model_name': model_name,
-#         'data_shape': f"{data_shape[0]}x{data_shape[1]}",
-#         'r2_score': r2,
-#         'rmse': rmse,
-#         'top_features': top_features
-#     }
-#
-#     results_df = pd.concat([results_df, pd.DataFrame([new_row])], ignore_index=True)
-#
-#
-# # Преобразование датафрейма
-# def df_fit_transformer(df: pl.DataFrame):
-#     oe_dict = {}
-#     df_copy = df.clone()
-#
-#     cat_cols = df_copy.select(pl.col(pl.String)).columns
-#     for col in cat_cols:
-#         oe = OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1)
-#         col_data = df_copy.select(col).to_numpy()
-#         oe.fit(col_data)
-#         transformed = oe.transform(col_data)
-#         df_copy = df_copy.with_columns(pl.Series(name=col, values=transformed.flatten()))
-#         oe_dict[col] = oe
-#
-#     num_types = [
-#         pl.Int8, pl.Int16, pl.Int32, pl.Int64,
-#         pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64,
-#         pl.Float32, pl.Float64
-#     ]
-#     num_cols = df_copy.select(pl.col(num_types)).columns
-#     scaler = StandardScaler()
-#     num_data = df_copy.select(num_cols).to_numpy()
-#     scaler.fit(num_data)
-#     scaled = scaler.transform(num_data)
-#     scaled_df = pl.DataFrame(scaled, schema=num_cols)
-#     df_copy = df_copy.drop(num_cols).hstack(scaled_df)
-#
-#     return df_copy, oe_dict, scaler
-#
-#
-# Быстрое снижение размерности
+
+
+def get_model_name(model):
+    return model.__class__.__name__
+
+
+def log_result(dataset_name, dataset_type, model, data_shape, r2, rmse, feature_names=None):
+    global results_df
+    model_name = get_model_name(model)
+
+    top_features = None
+    if hasattr(model, 'feature_importances_') and feature_names is not None:
+        importances = model.feature_importances_
+        indices = importances.argsort()[::-1][:10]
+        top_features = [feature_names[i] for i in indices]
+
+    new_row = {
+        'dataset_name': dataset_name,
+        'dataset_type': dataset_type,
+        'model_name': model_name,
+        'data_shape': f"{data_shape[0]}x{data_shape[1]}",
+        'r2_score': r2,
+        'rmse': rmse,
+        'top_features': top_features
+    }
+
+    results_df = pd.concat([results_df, pd.DataFrame([new_row])], ignore_index=True)
+
+
+def df_fit_transformer(df: pl.DataFrame):
+    oe_dict = {}
+    df_copy = df.clone()
+
+    cat_cols = df_copy.select(pl.col(pl.String)).columns
+    for col in cat_cols:
+        oe = OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1)
+        col_data = df_copy.select(col).to_numpy()
+        oe.fit(col_data)
+        transformed = oe.transform(col_data)
+        df_copy = df_copy.with_columns(pl.Series(name=col, values=transformed.flatten()))
+        oe_dict[col] = oe
+
+    num_types = [
+        pl.Int8, pl.Int16, pl.Int32, pl.Int64,
+        pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64,
+        pl.Float32, pl.Float64
+    ]
+    num_cols = df_copy.select(pl.col(num_types)).columns
+    scaler = StandardScaler()
+    num_data = df_copy.select(num_cols).to_numpy()
+    scaler.fit(num_data)
+    scaled = scaler.transform(num_data)
+    scaled_df = pl.DataFrame(scaled, schema=num_cols)
+    df_copy = df_copy.drop(num_cols).hstack(scaled_df)
+
+    return df_copy, oe_dict, scaler
+
 def reduce_dimensionality_fast(df: pl.DataFrame, var_thresh=1e-5, corr_thresh=0.95):
     num_types = [
         pl.Int8, pl.Int16, pl.Int32, pl.Int64,

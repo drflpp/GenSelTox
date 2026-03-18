@@ -1,19 +1,11 @@
 import re
 import time
 import random
-import pickle
-import datetime
-
 import numpy as np
 import pandas as pd
 import polars as pl
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap, to_hex
-
-import joblib
 import optuna
-
 from sklearn.model_selection import (
     train_test_split, KFold, StratifiedKFold, StratifiedShuffleSplit
 )
@@ -21,11 +13,7 @@ from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error, r
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.inspection import permutation_importance
-
-from xgboost import XGBRegressor
-from catboost import CatBoostRegressor
 from lightgbm import LGBMRegressor
-from sklearn.ensemble import RandomForestRegressor
 
 RANDOM_STATE = 42
 np.random.seed(RANDOM_STATE)

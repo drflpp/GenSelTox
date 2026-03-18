@@ -1,44 +1,10 @@
-from sklearn.metrics import mean_squared_error
-# import optuna
-from sklearn.ensemble import ExtraTreesRegressor
-from sklearn.model_selection import KFold
-import pandas as pd
-# import pyarrow as pa
-import polars as pl
-import numpy as np
-import time
-
-import numpy as np
-import polars as pl
+import matplotlib as mpl
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score, mean_squared_error
-from sklearn.feature_selection import VarianceThreshold
-from sklearn.preprocessing import OrdinalEncoder, StandardScaler
-from xgboost import XGBRegressor
-import time
-from catboost import CatBoostRegressor
-
-from sklearn.ensemble import RandomForestRegressor
-import re
-import matplotlib.pyplot as plt
-# import shap
-import matplotlib.pyplot as plt
-import xgboost as xgb
-import numpy as np
-import polars as pl
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score, root_mean_squared_error
-from sklearn.feature_selection import VarianceThreshold
-from sklearn.preprocessing import OrdinalEncoder, StandardScaler
-from xgboost import XGBRegressor
 import matplotlib.pyplot as plt
 import time
-from sklearn.inspection import permutation_importance
 import random
-from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 import re
 import numpy as np
-import pandas as pd
 import polars as pl
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.feature_selection import VarianceThreshold
@@ -46,10 +12,10 @@ from sklearn.feature_selection import VarianceThreshold
 RANDOM_STATE = 42
 np.random.seed(RANDOM_STATE)
 random.seed(RANDOM_STATE)
-plt.rcParams['figure.dpi'] = 100
+plt.rcParams['figure.dpi'] = 100  # Ensure consistent plotting resolution
+i = 1
 
 random.seed(0)
-
 
 def clean_feature_names(feature_names):
     clean_names = []
@@ -57,6 +23,62 @@ def clean_feature_names(feature_names):
         clean_name = re.sub(r'[^a-zA-Z0-9_]', '_', str(name))
         clean_names.append(clean_name)
     return clean_names
+
+
+def get_model_name(model):
+    return model.__class__.__name__
+
+
+def log_result(dataset_name, dataset_type, model, data_shape, r2, rmse, feature_names=None):
+    global results_df
+    model_name = get_model_name(model)
+
+    top_features = None
+    if hasattr(model, 'feature_importances_') and feature_names is not None:
+        importances = model.feature_importances_
+        indices = importances.argsort()[::-1][:10]
+        top_features = [feature_names[i] for i in indices]
+
+    new_row = {
+        'dataset_name': dataset_name,
+        'dataset_type': dataset_type,
+        'model_name': model_name,
+        'data_shape': f"{data_shape[0]}x{data_shape[1]}",
+        'r2_score': r2,
+        'rmse': rmse,
+        'top_features': top_features
+    }
+
+    results_df = pd.concat([results_df, pd.DataFrame([new_row])], ignore_index=True)
+
+
+def df_fit_transformer(df: pl.DataFrame):
+    oe_dict = {}
+    df_copy = df.clone()
+
+    cat_cols = df_copy.select(pl.col(pl.String)).columns
+    for col in cat_cols:
+        oe = OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1)
+        col_data = df_copy.select(col).to_numpy()
+        oe.fit(col_data)
+        transformed = oe.transform(col_data)
+        df_copy = df_copy.with_columns(pl.Series(name=col, values=transformed.flatten()))
+        oe_dict[col] = oe
+
+    num_types = [
+        pl.Int8, pl.Int16, pl.Int32, pl.Int64,
+        pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64,
+        pl.Float32, pl.Float64
+    ]
+    num_cols = df_copy.select(pl.col(num_types)).columns
+    scaler = StandardScaler()
+    num_data = df_copy.select(num_cols).to_numpy()
+    scaler.fit(num_data)
+    scaled = scaler.transform(num_data)
+    scaled_df = pl.DataFrame(scaled, schema=num_cols)
+    df_copy = df_copy.drop(num_cols).hstack(scaled_df)
+
+    return df_copy, oe_dict, scaler
 
 def reduce_dimensionality_fast(df: pl.DataFrame, var_thresh=1e-5, corr_thresh=0.95):
     num_types = [
@@ -130,7 +152,8 @@ class BasicPipeline:
         df = self.df
         if cols is not None:
             self.df = self.df.select(cols)
-
+        # df = my_preprocessing(self.df)
+        # df = self.df.drop(cols)
         df = df.unique(maintain_order=True)
         # df = df.drop(['Strain', 'strain'])
         df = df.unique(maintain_order=True)
@@ -151,6 +174,19 @@ class BasicPipeline:
         self.encoders = encoders
         self.scaler = scaler
         return X_transformed.to_pandas(), Y.to_pandas()
+
+    # def preprocess(self, df):
+    #     df.columns = clean_feature_names(df.columns)
+    #     X = df.drop(columns=['MIC_NP___g_mL_'])
+    #     Y = df['MIC_NP___g_mL_']
+
+    #     X_transformed, encoders, scaler = df_fit_transformer(X)
+    #     self.encoders = encoders
+    #     self.scaler = scaler
+
+    #     X_df = pd.DataFrame(X_transformed, columns=X.columns)
+    #     X_df['MIC_NP___g_mL_'] = Y.values
+    #     return X_df  # ✅ return a single DataFrame
 
     def split_data(self, X, Y):
         self.X_train, self.X_test, self.Y_train, self.Y_test = train_test_split(
@@ -206,6 +242,7 @@ class BasicPipeline:
         mpl.rcParams["pdf.fonttype"] = 42  # editable text in PDF
         mpl.rcParams["ps.fonttype"] = 42
 
+        # --- extract importances ---
         importances = model.feature_importances_
         importance_dict = dict(zip(feature_names, importances))
 
@@ -218,15 +255,18 @@ class BasicPipeline:
         names = [x[0] for x in top_features]
         scores = np.array([x[1] for x in top_features])
 
+        # 🔥 TRUE CONTINUOUS plotly-like purple gradient
         plotly_purple = LinearSegmentedColormap.from_list(
             "plotly_purple",
             ["#2a0a3d", "#7b3fe4", "#e0c7ff"]  # dark → light
         )
 
+        # 🚫 NO Normalize
         colors = plotly_purple(
             np.linspace(0.0, 1.0, top_n)
         )
 
+        # --- plot ---
         plt.figure(figsize=(8, 16))
         plt.barh(
             names,
@@ -362,6 +402,25 @@ class PipelineFIPI(BasicPipeline):
         print(f"✅ Permutation Importance selection done. Remaining features: {len(selected)}")
         self.plot_top_features_gradient(model, self.X_train.columns, fname=f'df{i}_FIPI.jpg')
 
+    # def run(self):
+    #     """Runs full pipeline and returns the final DataFrame after permutation importance."""
+    #     start = time.time()
+    #     print("🔹 Cleaning data...")
+    #     self.clean_data()
+    #     reduced_df = self.reduce_dimensions()
+
+    #     print("🔹 Preprocessing...")
+    #     X_df = self.preprocess(reduced_df)
+    #     self.split_data(X_df.drop(columns=['MIC_NP___g_mL_']), X_df['MIC_NP___g_mL_'])
+
+    #     print("🔹 Running full model pipeline (FI + PI)...")
+    #     self.run_model_pipeline()
+
+    #     # ✅ Return latest DataFrame after PI (using selected features)
+    #     final_df = pd.concat([self.X_train, self.Y_train], axis=1)
+    #     print(f"✅ Pipeline completed in {(time.time() - start):.2f} seconds.")
+    #     print(f"✅ Final DF shape after PI: {final_df.shape}")
+    #     return final_df
     def run(self):
         start = time.time()
         print("🔹 Cleaning data...")
@@ -374,6 +433,9 @@ class PipelineFIPI(BasicPipeline):
 
         print("🔹 Running full model pipeline (FI + PI)...")
         self.run_model_pipeline()
+
+        # ✅ Return latest DataFrame after PI
+        # final_df = pd.concat([self.X_train, self.Y_train], axis=1)
         final_df = pd.concat([
             pd.concat([self.X_train, self.Y_train], axis=1),
             pd.concat([self.X_test, self.Y_test], axis=1)
