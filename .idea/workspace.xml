@@ -5,6 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="36a785ce-6c75-4ff4-bdae-e5f98394983e" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GeneticAlgorithm/Catboost/ga_compd_generation.py" beforeDir="false" afterPath="$PROJECT_DIR$/GeneticAlgorithm/Catboost/ga_compd_generation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GeneticAlgorithm/XGBoost/ga_compd_generation.py" beforeDir="false" afterPath="$PROJECT_DIR$/GeneticAlgorithm/XGBoost/ga_compd_generation.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -101,7 +104,7 @@
       <workItem from="1772125037370" duration="3110000" />
       <workItem from="1772549126510" duration="2337000" />
       <workItem from="1773319179164" duration="10759000" />
-      <workItem from="1773831686521" duration="3107000" />
+      <workItem from="1773831686521" duration="3969000" />
     </task>
     <servers />
   </component>

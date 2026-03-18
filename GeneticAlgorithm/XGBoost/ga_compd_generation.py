@@ -6,48 +6,48 @@ import random
 import polars as pl
 import math
 import pyarrow
-# from Models import V4_transform_MIC_trial
+
 from models import pipeline
-name_of_pathogenic_bacteria = 'Escherichia coli ATCC 25922' # Pseudomonas aeruginosa None, Escherichia coli, Pseudomonas aeruginosa, Staphylococcus aureus ATCC 29213, Staphylococcus aureus None, Acinetobacter baumannii, Salmonella typhimurium
-name_of_good_bacteria = 'Pseudomonas aeruginosa nan' # Bacillus subtilis None, Escherichia coli ATCC 25922
+
+name_of_pathogenic_bacteria = 'Escherichia coli ATCC 25922'  # Pseudomonas aeruginosa None, Escherichia coli, Pseudomonas aeruginosa, Staphylococcus aureus ATCC 29213, Staphylococcus aureus None, Acinetobacter baumannii, Salmonella typhimurium
+name_of_good_bacteria = 'Pseudomonas aeruginosa nan'  # Bacillus subtilis None, Escherichia coli ATCC 25922
 
 population_size = 100
-df_MIC = pd.read_csv(r'D:\Projects\SelTox\GeneticAlgorithm\Catboost\data\final_df1_catboost_orig.csv', low_memory=False, index_col=0)
-df_MIC_bacteria = pd.read_csv(r'D:\Projects\SelTox\GeneticAlgorithm\Catboost\data\final_df1_catboost_orig_bact.csv', low_memory=False, index_col=0)
+df_MIC = pd.read_csv(r'D:\Projects\SelTox\GeneticAlgorithm\Catboost\data\final_df1_catboost_orig.csv', low_memory=False,
+                     index_col=0)
+df_MIC_bacteria = pd.read_csv(r'D:\Projects\SelTox\GeneticAlgorithm\Catboost\data\final_df1_catboost_orig_bact.csv',
+                              low_memory=False, index_col=0)
 
-X = df_MIC_bacteria.drop(['MIC_NP___g_mL_'], axis=1) # no need for concentration, zoi or gi as all of these parameters will be predicted
+X = df_MIC_bacteria.drop(['MIC_NP___g_mL_'],
+                         axis=1)  # no need for concentration, zoi or gi as all of these parameters will be predicted
 X['Bio_component_class'] = X['Bio_component_class'].fillna('none')
-# X = X[X['amw'] == 107.868]
-old_df = pd.read_csv(r'D:\Projects\SelTox\GeneticAlgorithm\Catboost\data\final_df1_catboost_orig_bact.csv', index_col=0)
-# print('old', old_df.columns)
-# X = X[expected_features]  # reorder columns
-material_list = ['amw', 'Source_origin', 'Capping_type', 'chi0v',  'Template_type',
- 'Bio_component_class',  'Red_env_strength',
- 'Red_env_type',  'Solvent_for_extract', 'Valance_electron',
- 'Solvent_polar',  'lipinskiHBA',  'NumHBA',
- 'CrippenClogP', 'hallKierAlpha', 'kappa1', 'np_synthesis'
- ]
 
-# print(X.columns)
-# it might be better not to choose random generation from unique set, we can just choose from all data ( higher number of data have higher chance to pick, this will imporve the predictibility of the material as model predict best for those who have higher number of data)
-''' generate dataframe with unique bacteria'''
-# X['bacteria_strain_mdr'] = X['bacteria_strain'] + ' ' + X['mdr'].astype('str')
+old_df = pd.read_csv(r'D:\Projects\SelTox\GeneticAlgorithm\Catboost\data\final_df1_catboost_orig_bact.csv', index_col=0)
+
+material_list = ['amw', 'Source_origin', 'Capping_type', 'chi0v', 'Template_type',
+                 'Bio_component_class', 'Red_env_strength',
+                 'Red_env_type', 'Solvent_for_extract', 'Valance_electron',
+                 'Solvent_polar', 'lipinskiHBA', 'NumHBA',
+                 'CrippenClogP', 'hallKierAlpha', 'kappa1', 'np_synthesis'
+                 ]
+
 uniq_bacteria_data = X
 print(uniq_bacteria_data)
 """uniq value datasets"""
-uniq = [] # stores all the unique characters available in the dataset, it helps to make a new population with random parameters
+uniq = []  # stores all the unique characters available in the dataset, it helps to make a new population with random parameters
 for a in range(len(X.columns)):
-  uni = pd.unique(X.iloc[:, a])
-  uniq.append(uni)
+    uni = pd.unique(X.iloc[:, a])
+    uniq.append(uni)
 
-"""create individual with values that are picked from the uniq array above"""
-drop_bacteria = [ 'bacteria_strain']
+drop_bacteria = ['bacteria_strain']
+
+
 def individuals():
     indv = []
     for a in range(len(X.columns)):
         if a == 1:
             diff_mid = random.uniform(3, 13)
-            uniqas = indv[0]+diff_mid
+            uniqas = indv[0] + diff_mid
 
         elif a == 2:
             diff_max = random.uniform(5, 10)
@@ -61,8 +61,8 @@ def individuals():
 
         elif a == 8:
             values = ['spherical', 'rod-shaped', 'quasi-spherical', 'spheroidal', 'cubic',
-       'oval', 'flat', 'pseudo-spherical', 'ellipsoidal', 'hexagonal',
-       'tubular']  # например, [10, 20, 30, 40]
+                      'oval', 'flat', 'pseudo-spherical', 'ellipsoidal', 'hexagonal',
+                      'tubular']  # например, [10, 20, 30, 40]
             probabilities = [0.7983425414364641,
                              0.04488950276243094,
                              0.03383977900552486,
@@ -86,190 +86,85 @@ def individuals():
         indv.append(uniqas)
     return indv
 
+
 indiv1 = individuals()
 indiv2 = individuals()
 print(indiv1)
 print(indiv2)
 
 
-    # indv = []
-    # for a in range(len(X.columns)):
-    #       # filtered = [x for x in uniq[a] if x <= limit]
-    # if a == 2:
-    #         diff_mid = random.randint(3, 13)
-    #         uniqas = [x for x in uniq[2] if x >= indv[0] + diff_mid]
-    #       # uniqas = random.choice(uniq[a])
-    # else:
-    #     uniqas = random.choice(uniq[a])
-
-    # uniqas = uniqas.drop('bacteria_mdr', axis=1)
-    # indv.append(uniqas)
-    # print(indv)
-    # size_i = [0, 2, 3]
-  # for  in indv:
-  #     print(n)
-
-  # return indv
-
-# print(individuals())
-"""generate population with specific population size"""
-#population with specific material descriptors were generated but cell line were still random
 def population(size):
-  pops = []
-  for indv in range(2*size):
-    single = individuals()
-    pops.append(single)
-  new_one = pd.DataFrame(data=pops, columns=X.columns)
-  # new_one = new_one[expected_features_1]
-  #control the range of any column/parameter from here
-  # neww = new_one[(new_one['concentration (ug/ml)'] > 5) & (new_one['Hydrodynamic diameter (nm)']> 8)]
-  # neww = new_one[(new_one['np_size_avg (nm)'] > 5)]
-  new = new_one.head(size)
-  # new = new.drop(drop_bacteria, axis =1)
-  # new = new.drop('bacteria', axis=1)
-  new = new.reset_index(drop=True)
-  #material and bacterial descriptor created here have random samples taken from the original data, later we use part of it to replace in randomly generated df so that we can keep the same NP with its descriptor and same bacteria with descriptor
-  material_descriptor = X.drop(drop_bacteria, axis=1).iloc[[random.randrange(0, len(X)) for _ in range(len(new))]]
-  # print('mat descr',material_descriptor.columns)
-  # print('material_descriptor', material_descriptor.columns)
-  material_descriptor = material_descriptor.reset_index(drop=True)
-  # material_descriptor = material_descriptor[material_descriptor['amw'] == 107.868]
-  # print(material_descriptor)
-  # new[['amw', 'Valance_electron']] = material_descriptor[['amw', 'Valance_electron']]
-  new[material_list] = material_descriptor[material_list]
-  # print('new',new)
-  return new
+    pops = []
+    for indv in range(2 * size):
+        single = individuals()
+        pops.append(single)
+    new_one = pd.DataFrame(data=pops, columns=X.columns)
+
+    new = new_one.head(size)
+
+    new = new.reset_index(drop=True)
+    material_descriptor = X.drop(drop_bacteria, axis=1).iloc[[random.randrange(0, len(X)) for _ in range(len(new))]]
+
+    material_descriptor = material_descriptor.reset_index(drop=True)
+
+    new[material_list] = material_descriptor[material_list]
+    return new
 
 
 dff = population(population_size)
-# print('here', dff)
-# dff
-# print(dff.loc[3])
 
-"""change bacteria type into pathogenic and non pathogenic"""
+
 def bacteria_type(population_df):
-  single_bacteria_pathogen = uniq_bacteria_data.loc[uniq_bacteria_data['bacteria_strain'] == name_of_pathogenic_bacteria] # Pseudomonas aeruginosa None, Escherichia coli, Pseudomonas aeruginosa, Staphylococcus aureus ATCC 29213, Staphylococcus aureus None, Acinetobacter baumannii, Salmonella typhimurium
-  single_bacteria_nonpathogen = uniq_bacteria_data.loc[uniq_bacteria_data['bacteria_strain'] == name_of_good_bacteria] # Bacillus subtilis None, Escherichia coli ATCC 25922
-  pop_non_pathogen =pd.concat([single_bacteria_nonpathogen]*len(population_df), ignore_index=True)
-  pop_pathogen = pd.concat([single_bacteria_pathogen] * len(population_df), ignore_index=True)
-  df_pathogen= population_df.copy()
-  df_non_pathogen = population_df.copy()
-  print(population_df)
-  # df_non_pathogen[['bacteria', 'bac_type', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'gram', 'min_Incub_period, h', 'growth_temp, C','isolated_from']] = pop_non_pathogen[['bacteria', 'bac_type', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'gram', 'min_Incub_period, h', 'growth_temp, C','isolated_from']]
-  # df_pathogen[['bacteria', 'bac_type', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'gram', 'min_Incub_period, h', 'growth_temp, C','isolated_from']] = pop_pathogen[['bacteria', 'bac_type', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'gram', 'min_Incub_period, h', 'growth_temp, C','isolated_from']]
-  feature_list = [ 'mdr', 'prim_specific_habitat', 'max_Incub_period__h', 'avg_Incub_period__h',
- 'K07123', 'K03629', 'min_Incub_period__h', 'K07050', 'K20345', 'sec_habitat', 'bac_type', 'K23945',
- 'common_environment', 'K01191', 'K13566', 'K07484', 'K25602', 'K11206', 'K07486', 'K12942', 'K01153',
- 'K02027', 'K00849', 'K01878', 'K00432', 'K01026', 'K10844', 'K03741', 'K00252', 'K01190', 'K03703', 'K09936',
- 'K07485', 'K07778', 'K16148', 'bacteria_strain'   # , 'bacteria_strain_mdr'
-                                    ]
-  df_non_pathogen[feature_list] = pop_non_pathogen[feature_list]
-  df_pathogen[feature_list] = pop_pathogen[feature_list]
+    single_bacteria_pathogen = uniq_bacteria_data.loc[uniq_bacteria_data[
+                                                          'bacteria_strain'] == name_of_pathogenic_bacteria]  # Pseudomonas aeruginosa None, Escherichia coli, Pseudomonas aeruginosa, Staphylococcus aureus ATCC 29213, Staphylococcus aureus None, Acinetobacter baumannii, Salmonella typhimurium
+    single_bacteria_nonpathogen = uniq_bacteria_data.loc[uniq_bacteria_data[
+                                                             'bacteria_strain'] == name_of_good_bacteria]  # Bacillus subtilis None, Escherichia coli ATCC 25922
+    pop_non_pathogen = pd.concat([single_bacteria_nonpathogen] * len(population_df), ignore_index=True)
+    pop_pathogen = pd.concat([single_bacteria_pathogen] * len(population_df), ignore_index=True)
+    df_pathogen = population_df.copy()
+    df_non_pathogen = population_df.copy()
+    print(population_df)
+    feature_list = ['mdr', 'prim_specific_habitat', 'max_Incub_period__h', 'avg_Incub_period__h',
+                    'K07123', 'K03629', 'min_Incub_period__h', 'K07050', 'K20345', 'sec_habitat', 'bac_type', 'K23945',
+                    'common_environment', 'K01191', 'K13566', 'K07484', 'K25602', 'K11206', 'K07486', 'K12942',
+                    'K01153',
+                    'K02027', 'K00849', 'K01878', 'K00432', 'K01026', 'K10844', 'K03741', 'K00252', 'K01190', 'K03703',
+                    'K09936',
+                    'K07485', 'K07778', 'K16148', 'bacteria_strain'  # , 'bacteria_strain_mdr'
+                    ]
+    df_non_pathogen[feature_list] = pop_non_pathogen[feature_list]
+    df_pathogen[feature_list] = pop_pathogen[feature_list]
 
-  return df_non_pathogen, df_pathogen
+    return df_non_pathogen, df_pathogen
+
 
 print('here', bacteria_type(dff))
 
+
 def fitness(df):
-  # start_time = time.time()
-  n_path, path_gen = bacteria_type(df)
-  # np = V4_transform_MIC_trial.first_transform(n_path)
-  # p = V4_transform_MIC_trial.first_transform(path_gen)
+    n_path, path_gen = bacteria_type(df)
 
-  # np = np.drop(drop_bacteria, axis=1)
-  # p = p.drop(drop_bacteria, axis=1)
-  # normal_b = V4_models.cat_predict(np)
-  # pathogen_b = V4_models.cat_predict(p)
-  normal_b = pipeline.predict(pl.from_pandas(n_path))
-  pathogen_b = pipeline.predict(pl.from_pandas(path_gen))
-  # end_time = time.time()
-  # print('total time for model to predict 100 sample in milisec: ', (end_time-start_time)*1000, 'length of df', len(df))
-  fitness = []
-  norm_v = []
-  path_v = []
-  for a in range(len(normal_b)):
-    n = normal_b[a]
-    c = pathogen_b[a]
-    #for MIC, higher MIC means lower toxicity and lower MIC means higher toxicity; so we are searching for higher MIC of non pathogenic bacteria and lower MIC of pathogenic bacteria
-    fit = n - c # higher MIC for normal bacteria and lower MIC for pathogenic bacteria
-    fitnn = fit.tolist()
-    norm_v.append(n)
-    path_v.append(c)
-    fitness.append(fitnn)
-  copy = n_path.assign(pred_MIC_norm=norm_v)
-  copy1 = copy.assign(pathogenic_bacteria = path_gen['bacteria_strain'].tolist())
-  copy2 = copy1.assign(pred_MIC_pathogen=path_v)
-  copy3 = copy2.assign(Fitness = fitness)
-  copy3 = copy3.sort_values('Fitness', ascending=False)
-  copy3['pred_norm_MIC_original'] = math.e** copy3['pred_MIC_norm']
-  copy3['pred_path_MIC_original'] = math.e** copy3['pred_MIC_pathogen']
-  return copy3
+    normal_b = pipeline.predict(pl.from_pandas(n_path))
+    pathogen_b = pipeline.predict(pl.from_pandas(path_gen))
+    fitness = []
+    norm_v = []
+    path_v = []
+    for a in range(len(normal_b)):
+        n = normal_b[a]
+        c = pathogen_b[a]
+        fit = n - c  # higher MIC for normal bacteria and lower MIC for pathogenic bacteria
+        fitnn = fit.tolist()
+        norm_v.append(n)
+        path_v.append(c)
+        fitness.append(fitnn)
+    copy = n_path.assign(pred_MIC_norm=norm_v)
+    copy1 = copy.assign(pathogenic_bacteria=path_gen['bacteria_strain'].tolist())
+    copy2 = copy1.assign(pred_MIC_pathogen=path_v)
+    copy3 = copy2.assign(Fitness=fitness)
+    copy3 = copy3.sort_values('Fitness', ascending=False)
+    copy3['pred_norm_MIC_original'] = math.e ** copy3['pred_MIC_norm']
+    copy3['pred_path_MIC_original'] = math.e ** copy3['pred_MIC_pathogen']
+    return copy3
 
-print(fitness(dff))
+
 fitness(dff)
-# dff.to_csv('sample.csv')
-
-
-def fitness_new(test_compound):
-  n_path, path_gen = bacteria_type(test_compound)
-  # np = V4_transform_MIC_trial.transform(n_path)
-  np = V4_transform_MIC_trial.transform(n_path)
-  p = V4_transform_MIC_trial.transform(path_gen)
-  np = np.drop(drop_bacteria, axis=1)
-  p = p.drop(drop_bacteria, axis=1)
-  normal_b = V4_models.cat_predict(np)
-  pathogen_b = V4_models.cat_predict(p)
-  # end_time = time.time()
-  # print('total time for model to predict 100 sample in milisec: ', (end_time-start_time)*1000, 'length of df', len(df))
-  fitness = []
-  norm_v = []
-  path_v = []
-  for a in range(len(normal_b)):
-    n = normal_b[a]
-    c = pathogen_b[a]
-    # for MIC, higher MIC means lower toxicity and lower MIC means higher toxicity; so we are searching for higher MIC of non pathogenic bacteria and lower MIC of pathogenic bacteria
-    fit = n - c  # higher MIC for normal bacteria and lower MIC for pathogenic bacteria
-    fitnn = fit.tolist()
-    norm_v.append(n)
-    path_v.append(c)
-    fitness.append(fitnn)
-  copy = n_path.assign(pred_MIC_norm=norm_v)
-  copy1 = copy.assign(pathogenic_bacteria=path_gen['bacteria'].tolist())
-  copy2 = copy1.assign(pred_MIC_pathogen=path_v)
-  copy3 = copy2.assign(Fitness=fitness)
-  copy3 = copy3.sort_values('Fitness', ascending=False)
-  copy3['pred_norm_MIC_original'] = 10 ** copy3['pred_MIC_norm']
-  copy3['pred_path_MIC_original'] = 10 ** copy3['pred_MIC_pathogen']
-  return copy3
-
-  # print(fitness(dff))
-  # fitness(dff)
-
-  # fitness = []
-  # norm_v = []
-  # canc_v = []
-  # for a in range(len(norm_viability)):
-  #   n = norm_viability[a]
-  #   c = canc_viability[a]
-  #   fit = n - c
-  #   fitness.append(fit)
-  #   norm_v.append(n)
-  #   canc_v.append(c)
-  # copy = norm.assign(norm_v=norm_v)
-  # copy2 = copy.assign(canc_v=canc_v)
-  # copy3 = copy2.assign(Fitness=fitness)
-  # copy3 = copy3.sort_values('Fitness', ascending=False)
-  # return copy3
-
-
-# test_compound =pd.read_csv(r'D:\NPs_Platform\NPs_Platform\V4_MIC\sample_MIC.csv', sep=';')
-# #
-# print(test_compound)
-# # testt.to_csv(r'D:\NPs_Platform\NPs_Platform\V4_MIC\sample_MIC.csv')
-#
-#
-# testt = fitness_new(test_compound)
-# testt.to_csv(r'D:\NPs_Platform\NPs_Platform\V4_MIC\sample_MIC_result.csv')
-# # print(testt)
-
-# print(df_MIC['shape'].value_counts().sort_values())

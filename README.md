@@ -1,4 +1,4 @@
-# GenSelTox: AI-Driven Discovery Platform for Selective Antimicrobial Nanoparticles
+# GenSelTox: AI First Design and Experimental Discovery of Selectively Toxic Antimicrobial Inorganic Nanoparticles 
 
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
@@ -6,17 +6,7 @@
 
 ## Abstract
 
-The rational design of nanoparticles (NPs) with selective antimicrobial activity remains a major challenge in nanomedicine, particularly for combating antimicrobial resistance while preserving beneficial microbiota. This repository contains the complete implementation of **GenSelTox**, an AI-driven discovery platform that integrates predictive modeling and generative design to prioritize selectively antibacterial inorganic NPs, which are subsequently validated experimentally.
-
-The platform combines a curated dataset of **2,098 antibacterial activity measurements** with enriched descriptors, including:
-- Physicochemical properties
-- Synthesis parameters  
-- KEGG-derived functional orthologs and metabolic pathways
-
-**Key Performance Metrics:**
-- XGBoost regression achieved cross-validated **R² scores of 0.79, 0.83, and 0.80** for predicting minimal inhibitory concentration (MIC) with experimental parameters, functional ortholog features, and metabolic pathways, respectively
-- Experimental validation confirmed species-selective inhibition consistent with model predictions
-- Interpretable features revealed key genomic drivers of susceptibility, including oxidative stress and DNA repair pathways
+The rational design of nanoparticles (NPs) with selective antimicrobial activity remains a major challenge in nanomedicine, particularly for combating antimicrobial resistance while preserving beneficial microbiota. In this work, we present an AI-driven discovery platform that integrates predictive modeling and generative design to prioritize selectively antibacterial inorganic NPs, which are subsequently validated experimentally. The platform combines a curated dataset of 2098 antibacterial activity measurements with enriched descriptors, including physicochemical properties, synthesis parameters, and Kyoto Encyclopedia of Genes and Genomes (KEGG) derived functional orthologs and metabolic pathways. Gradient boosting models trained on this gene informed dataset achieved high predictive performance, especially XGB regression acheived cross-validated R² score of 0.79, 0.83 and 0.80 for predicting minimal concentration (MC) with experimental parameters, functional ortholog features and metabolic pathways. Next, SelTox v2.0 couples these models with a generative framework, integrating genetic algorithms, and reinforcement learning to explore NP formulation space for optimal selective toxicity. As proof-of-concept, one of top-ranked ZnO NP was synthesized and tested against pathogenic (Staphylococcus aureus, Pseudomonas aeruginosa) and non-pathogenic (Bacillus subtilis, Escherichia coli) strains. Experimental results confirmed species-selective inhibition consistent with model predictions, and interpretable features revealed key genomic drivers of susceptibility, including oxidative stress and DNA repair pathways. By uniting AI with mechanistic insight and empirical validation, SelTox v2.0 advances the field toward precision nanotherapeutics. The platform offers a scalable, interpretable, and generalizable framework for selective nanoparticle design, with broad potential for adaptation to antifungal, antiviral, and anticancer applications. 
 
 ![GenSelTox Platform Overview](Figure.jpg)
 
@@ -51,51 +41,6 @@ The platform combines a curated dataset of **2,098 antibacterial activity measur
 ✅ **Interpretability**: SHAP values and feature importance analysis for mechanistic insights  
 ✅ **Experimental Validation**: Proof-of-concept with synthesized ZnO NPs against pathogenic and non-pathogenic strains
 
----
-
-## Repository Structure
-
-```
-GenSelTox/
-├── Data and Preprocessing/
-│   ├── GET_KEGG_ko_path.ipynb      # KEGG data acquisition (KO & pathways)
-│   ├── func.py                      # Utility functions for preprocessing
-│   ├── merging.py                   # Dataset merging with genomic features
-│   └── preprocessing.py             # Data cleaning and transformation
-│
-├── MLModelBuilding/
-│   ├── BasePipeline.py              # Core pipeline architecture
-│   ├── TrainablePipeline.py         # Training and evaluation framework
-│   └── FeatureSelection.ipynb       # Feature selection workflows
-│
-├── MLModelOptimization/
-│   ├── optimize_xgb.py              # XGBoost hyperparameter tuning
-│   └── optimize_catboost.py         # CatBoost hyperparameter tuning
-│
-├── GeneticAlgorithm/
-│   ├── Catboost/
-│   │   ├── ga_compd_generation.py   # Population generation
-│   │   ├── cross_modified.py        # Crossover operations
-│   │   ├── crossing_mutation.py     # Mutation operations
-│   │   ├── ga_main.py              # Main genetic algorithm loop
-│   │   └── model/                   # Pre-trained CatBoost model
-│   │
-│   └── XGBoost/
-│       ├── ga_compd_generation.py   # Population generation
-│       ├── cross_modified.py        # Crossover operations
-│       ├── crossing_mutation.py     # Mutation operations
-│       ├── ga_main.py              # Main genetic algorithm loop
-│       └── model/                   # Pre-trained XGBoost model
-│
-├── ReinforcementLearning/
-│   ├── rl_en.py                    # RL-based NP discovery (PPO/SAC/DDPG)
-│   └── config.yaml                  # RL configuration parameters
-│
-├── Figure.jpg                       # Platform overview schematic
-└── README.md                        # This file
-```
-
----
 
 ## Installation
 
